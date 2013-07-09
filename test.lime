@@ -1,0 +1,171 @@
+
+
+include
+{
+#include <something>
+}
+
+
+tokenizer blockcomment
+ 
+  ignore "/*" start blockcomment
+  ignore "[^*]+"
+  ignore "*"
+  halt "*/"
+  
+  match "pumpkin" as TOKEN_PRIVATE
+
+end
+
+
+include
+{
+  // more included code
+}
+
+
+tokenizer feylexer
+
+  match "private" as TOKEN_PRIVATE
+  match /[_a-zA-Z][_a-zA-Z0-9]*/ as TOKEN_IDENT
+  
+  ignore "[ \t]+"
+  
+  ignore "\n" { linecount++; }
+  ignore "//[^\n]*"
+  
+  ignore "/*" start blockcomment
+  {
+    printf("Comment\n");
+  }
+
+end
+
+
+
+#######
+
+
+tokenizer feylexer
+
+  match "private" as TOKEN_PRIVATE	// 0
+  ignore "[ \t]+"			// 1
+  ignore "\n" { printf("newline"); }	// 2
+  
+  ignore "/*" start blockcomment	// 3
+  {
+    printf("Comment\n");
+  }
+  
+  halt "quit"				// 4
+
+end
+
+
+struct Token
+{
+  int		id;
+  StringPiece	text;
+  int		start_char;
+  int		line;
+  int		offset;
+  void*		user_data;
+}
+
+
+
+struct feylexer
+{
+  static const regexs[] = {
+    "private",
+    "[_a-zA-Z][_a-zA-Z0-9]*",
+    "\n",
+    "/*",
+    "quit"
+  }
+  
+  
+    feylexer()
+  : lime_tokenizer()
+  {
+  }
+  
+ 
+  bool match(StringPiece& text)
+  {
+    
+    while( r == IGNORE )
+    {
+      r = match_(text);
+    }
+  }
+  
+  
+  Token next_token(StringPiece& text)
+  {
+    vector<int>  candidates_;
+    
+    regex_set_.Match(text, candidates_);
+      
+    int idx = std::min_element(candidates_);
+
+    // update charcount, linecount etc
+    
+    
+    switch( idx )
+    {
+      case 0:
+      {
+	TOKEN.id = TOKEN_PRIVATE;
+      } break;
+      
+      case 1:
+      {
+	TOKEN.id = IGNORE;
+      } break;
+      
+      case 2:
+      {
+	{ printf("newline"); }
+	TOKEN.id = IGNORE;
+      } break;
+      
+      case 3:
+      {
+	blockcomment  start;
+	
+	do {
+	  Token t = start.next_token(text);
+	  
+	  if ( t.id == ERROR )
+	    return t;
+	} while(t.id != HALT);
+	
+	
+	
+	{
+    printf("Comment\n");
+  }
+	TOKEN.id = IGNORE;
+      } break;
+      
+      case 4:
+      {
+	TOKEN.id = HALT;
+      } // break;
+      
+      default:
+      {
+	TOKEN.id = ERROR;
+      } break;
+    }
+    
+    return token_;
+  }
+  
+  
+  RE2::Set	regex_set_;
+  Token		token_;
+  
+};
+

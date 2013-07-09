@@ -1,0 +1,58 @@
+
+
+%token_type	{ const char* }
+%token_prefix	LIME_
+
+
+%parse_accept
+{
+  printf("parsing complete!\n");
+}
+  
+%parse_failure
+{
+  fprintf(stderr,"Giving up.  Parser is hopelessly lost...\n");
+}
+
+
+%start_symbol	module
+
+
+module ::= modulebody.
+
+
+modulebody ::= moduleitem.
+modulebody ::= modulebody moduleitem.
+
+
+moduleitem ::= include.
+moduleitem ::= tokenizer.
+
+
+
+include ::= INCLUDE CURLYBODY.
+
+
+tokenizer ::= TOKENIZER IDENT rulelist END.
+
+
+rulelist ::= rule.
+rulelist ::= rulelist rule.
+
+
+rule ::= INTERFACE CURLYBODY.
+rule ::= rulehead.
+rule ::= rulehead action.
+
+
+rulehead ::= MATCH REGEX AS value.
+rulehead ::= IGNORE REGEX.
+rulehead ::= IGNORE REGEX START IDENT.
+rulehead ::= HALT REGEX.
+
+
+value ::= IDENT.
+value ::= NUMBER.
+
+
+action ::= CURLYBODY.
