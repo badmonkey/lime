@@ -32,7 +32,6 @@ moduleitem ::= tokenizer.
 
 include ::= INCLUDE CURLYBODY.
 
-
 tokenizer ::= TOKENIZER IDENT rulelist END.
 
 
@@ -40,14 +39,15 @@ rulelist ::= rule.
 rulelist ::= rulelist rule.
 
 
-rule ::= INTERFACE CURLYBODY.
+rule ::= CODE CURLYBODY.
 rule ::= rulehead.
 rule ::= rulehead action.
 
 
 rulehead ::= MATCH REGEX AS value.
+rulehead ::= MATCH WITH IDENT START REGEX AS value.
 rulehead ::= IGNORE REGEX.
-rulehead ::= IGNORE REGEX START IDENT.
+rulehead ::= IGNORE REGEX USING IDENT.
 rulehead ::= HALT REGEX.
 
 
