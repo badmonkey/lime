@@ -1,5 +1,8 @@
 
 
+namespace lime
+
+
 tokenizer curlyblock
   ignore "{" using curlyblock
   ignore "[^}]+"
