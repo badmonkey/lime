@@ -11,15 +11,15 @@ end
 
 
 tokenizer regex_quote
-  ignore /\\"/
-  ignore "\\"
+  ignore /[^\\"]+/
+  ignore /\\./
   halt /"/
 end
 
 
 tokenizer regex_slash
-  ignore "\\/"
-  ignore "\\"
+  ignore "[^\\/]+"
+  ignore "\\."
   halt "/"
 end
 

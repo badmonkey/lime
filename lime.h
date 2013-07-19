@@ -23,9 +23,25 @@ struct Token
     StringPiece	text;
     int		line;
     int		offset;
-    void*	user_data;
+    void*	extra_data;
   
 }; // struct Token
+
+
+class Counters
+{
+public:
+    typedef std::shared_ptr<Counters>  ptr;
+    
+    virtual int line() const;
+    virtual int offset() const;
+    
+    virtual void add_offset(int amt);
+    virtual void new_line();
+    
+    static ptr make_counters();
+    static ptr make_proxy(ptr c);
+};
 
 
 enum TOKENID
@@ -51,13 +67,12 @@ struct tokenizer
 {
       tokenizer()
     : regex_set_( lime::standard_options(), re2::RE2::ANCHOR_START)
-    , linenum_(0)
-    , offset_(0)
+    , counters_( Counters::make_counters() );
     {
     } // tokenizer()
     
     
-    void add(int idx, const char* pattern)
+    void add_pattern(int idx, const char* pattern)
     {
 	std::string  error;
 	
@@ -65,21 +80,89 @@ struct tokenizer
 	{
 	    throw std::runtime_error(error);
 	}
-    } // add()
+    } // add_pattern()
     
     
-    void new_line()
+    int match_token(StringPiece& text, Token& tok)
     {
-	linenum_++;
-	offset_ = 0;
+	std::vector<int>	matches;
+	lime::StringPiece	capture;
 	
-    } // new_line()
+	
+	tok.line = counters_->line();
+	tok.offset = counters_->offset();
+	
+	
+	if ( text.empty() )
+	{
+	    tok.text = text;
+	    tok.id = lime::HALT;
+	    
+	    return -1;
+	}
+	
+	if (  !regex_set_.Match(text, &matches, &capture)
+	    || matches.empty() )
+	{
+	    // error
+	}
+	
+	tok.text.set( capture.data(), capture.length() );
+	tok.extra_data = nullptr;
+	
+// 	offset_ += capture.length();
+	counters_->add_offset( capture.length() );
+	text.remove_prefix( capture.length() );
+	
+	return *std::min_element( matches.begin(), matches.end() );
+    } // match_token()
+    
+    
+//     void new_line()
+//     {
+// 	linenum_++;
+// 	offset_ = 0;
+// 	
+//     } // new_line()
+
+    void set_proxy_counters(Counters::ptr c)
+    {
+	counters_ = Counters::make_proxy(c);
+    } // set_proxy_counters()
+    
+    
+    StringPiece span_pieces(const StringPiece& head, const StringPiece& tail)
+    {
+	return StringPiece( head.data()
+			  , tail.data() - head.data() + tail.length() );
+    } // span_pieces()
     
     
     lime::Set		regex_set_;
-    int			linenum_;
-    int			offset_;
+    Counters::ptr	counters_;
 }; // struct tokenizer
+
+
+
+template<typename T>
+Token process_machine(lime::StringPiece& text, Counters::ptr parent)
+{
+    T  machine;
+    lime::Token t;
+    
+    machine.set_proxy_counters(parent);
+		
+    do
+    {
+	t = machine.next_token(text);
+	if ( t.id == lime::ERROR )
+	    return t;
+    }
+    while( t.id != lime::HALT );
+    
+		
+    return t;
+} // ignore_machine()
 
 
 } // namespace lime

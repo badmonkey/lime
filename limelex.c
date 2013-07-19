@@ -20,10 +20,10 @@ struct curlyblock : public lime::tokenizer
     curlyblock()
     : tokenizer()
     {
-	add(0, "{");
-	add(1, "[^}]+");
-	add(2, "}");
-	ass(3, "\n");
+	add_pattern(0, "{");
+	add_pattern(1, "[^}]+");
+	add_pattern(2, "}");
+	add_pattern(3, "\n");
 	
 	regex_set_.Compile();
 	
@@ -32,40 +32,27 @@ struct curlyblock : public lime::tokenizer
     
     lime::Token next_token(lime::StringPiece& text)
     {
-	std::vector<int>	matches;
-	lime::StringPiece	capture;
+	lime::StringPiece	START = text;
 	lime::Token		TOKEN;
 	
 	
-	if ( !regex_set_.Match(text, &matches, &capture) )
-	{
-	    // error
-	}
-	
-	int idx = *std::min_element( matches.begin(), matches.end() );
-	TOKEN.text.set( capture.data(), capture.length() );
-	
-	text.remove_prefix( capture.length() );
-	
+	int idx = match_token(text, TOKEN);
 	
 	switch( idx )
 	{
 	    case 0:
 	    {
-		curlyblock  block;
-		lime::Token t;
+		lime::Token t = lime::process_machine<curlyblock>(text, counters_);
+		if ( t.id == lime::ERROR )
+		    return t;
 		
-		do
-		{
-		    t = block.next_token(text);
-		    if ( t.id == lime::ERROR )
-			return t;
-		}
-		while( t.id != lime::HALT );
+		TOKEN.text = span_pieces( START, t.text );
+		TOKEN.id = lime::IGNORE;
 	    }
 	    break;
 	    
 	    case 1:
+		TOKEN.id = lime::IGNORE;
 	    break;
 	    
 	    case 2:
@@ -73,15 +60,12 @@ struct curlyblock : public lime::tokenizer
 	    break;
 	    
 	    case 3:
-	    {
 		new_line();
 		TOKEN.id = lime::IGNORE;
-	    }
 	    break;
 
 	    default:
-	    {
-	    }
+		/* pass on HALTS from next_token */
 	    break;
 	}
 	
@@ -91,4 +75,66 @@ struct curlyblock : public lime::tokenizer
 }; // struct curlyblock
 
 
-}
+/*
+tokenizer regex_quote
+  ignore /[^\\"]+/
+  ignore /\\./
+  halt /"/
+end
+*/
+struct regex_quote : public lime::tokenizer
+{
+	
+    regex_quote()
+    : tokenizer()
+    {
+	add_pattern(0, "[^\\\"]+");
+	add_pattern(1, "\\.");
+	add_pattern(2, "\"");
+	add_pattern(3, "\r?\n");
+	
+	regex_set_.Compile();
+	
+    }
+    
+    
+    lime::Token next_token(lime::StringPiece& text)
+    {
+	lime::StringPiece	START = text;
+	lime::Token		TOKEN;
+	
+	
+	int idx = match_token(text, TOKEN);
+	
+	switch( idx )
+	{
+	    case 0:
+		TOKEN.id = lime::IGNORE;
+	    break;
+	    
+	    case 1:
+		TOKEN.id = lime::IGNORE;
+	    break;
+	    
+	    case 2:
+		TOKEN.id = lime::HALT;
+	    break;
+	    
+	    case 3: /* handle new line */
+		counters_->new_line();
+		TOKEN.id = lime::IGNORE;
+	    break;
+
+	    default:
+		/* pass on HALTS from match_token */
+	    break;
+	}
+	
+	return TOKEN;
+    } // next_token()
+
+}; // struct regex_quote
+
+
+
+} // namespace lime
