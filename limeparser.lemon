@@ -39,15 +39,14 @@ rulelist ::= rule.
 rulelist ::= rulelist rule.
 
 
-rule ::= CODE CURLYBODY.
 rule ::= rulehead.
 rule ::= rulehead action.
 
 
 rulehead ::= MATCH REGEX AS value.
-rulehead ::= MATCH WITH IDENT START REGEX AS value.
+rulehead ::= MATCH REGEX THEN IDENT AS value.
 rulehead ::= IGNORE REGEX.
-rulehead ::= IGNORE REGEX USING IDENT.
+rulehead ::= IGNORE IDENT THEN REGEX.
 rulehead ::= HALT REGEX.
 
 

@@ -4,7 +4,7 @@ namespace lime
 
 
 tokenizer curlyblock
-  ignore "{" using curlyblock
+  ignore "{" then curlyblock
   ignore "[^}]+"
   halt "}"
 end
@@ -29,23 +29,21 @@ tokenizer lime
   match "include" as LIME_INCLUDE
   match "tokeni(z|s)er" as LIME_TOKENIZER
   match "end" as LIME_END
-  match "code" as LIME_CODE
   match "match" as LIME_MATCH
   match "as" as LIME_AS
   match "ignore" as LIME_IGNORE
   match "halt" as LIME_HALT
-  match "using" as LIME_USING
+  match "then" as LIME_THEN
 
   match /[0-9]+/ as LIME_NUMBER
 
   ignore "[ \t]+"
-  ignore "\n"
 
   match "[_a-zA-Z][_a-zA-Z0-9]*" as LIME_IDENT
 
-  match /"/ as LIME_REGEX
-  match "/" as LIME_REGEX
+  match /"/ then regex_quote as LIME_REGEX
+  match "/" then regex_slash as LIME_REGEX
   
-  match with curlyblock start "{" as LIME_CURLYBODY
+  match "{" then curlyblock as LIME_CURLYBODY
 
 end
