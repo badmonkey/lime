@@ -60,8 +60,8 @@ struct curlyblock : public lime::tokenizer
 	    break;
 	    
 	    case 3:
-		new_line();
 		TOKEN.id = lime::IGNORE;
+                { new_line(); }
 	    break;
 
 	    default:

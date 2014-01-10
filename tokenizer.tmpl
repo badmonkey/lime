@@ -1,0 +1,79 @@
+
+#include "lime/lime.h"
+
+{{#NAMESPACE}}
+namespace {{NAMESPACE_NAME}}
+{
+{{/NAMESPACE}}
+
+{{#INCLUDES}}
+{{INCLUDE_CODE}}
+{{/INCLUDES}}
+
+
+{{#TOKENIZER}}
+struct {{TOKENIZER_NAME}} : public lime::tokenizer
+{
+        
+    {{TOKENIZER_NAME}}()
+    : tokenizer()
+    {
+{{#INIT_PATTERN}}
+        add_pattern({{PATTERN_IDX}}, {{PATTERN_STRING}});
+{{/INIT_PATTERN}}
+        
+        regex_set_.Compile();
+        
+    } // {{TOKENIZER_NAME}}()
+
+
+    lime::Token next_token(lime::StringPiece& text)
+    {
+        lime::StringPiece       START = text;
+        lime::Token             TOKEN;
+        
+        
+        int idx = match_token(text, TOKEN);
+        
+        switch( idx )
+        {
+{{#PATTERN_MATCH}}
+            case {{PATTERN_IDX}}:
+            {
+{{#MATCH_MACHINE}}
+                lime::Token t = lime::process_machine<{{MACHINE_NAME}}>(*this, text);
+                if ( t.id == lime::ERROR )
+                    return t;
+                
+                TOKEN.text = span_pieces( START, t.text );
+{{/MATCH_MACHINE}}
+{{#TOKEN_IGNORE}}TOKEN.id = lime::IGNORE;{{/TOKEN_IGNORE}}
+{{#TOKEN_HALT}}TOKEN.id = lime::HALT;{{/TOKEN_HALT}}
+{{#TOKEN_MATCH}}TOKEN.id = {{TOKEN_ID}};{{/TOKEN_MATCH}}
+{{#PATTERN_CUSTOM}}
+                // include custom code supplied by client
+                {{PATTERN_CUSTOM_CODE}}
+{{/PATTERN_CUSTOM}}
+            }
+            break;
+
+{{/PATTERN_MATCH}}
+
+            default:
+                /* pass on HALTS and ERRORS from match_token */
+            break;
+        }
+        
+        return TOKEN;
+    } // next_token()
+
+}; // struct {{TOKENIZER_NAME}}
+
+{{/TOKENIZER}}
+
+{{#NAMESPACE}}
+} // namespace {{NAMESPACE_NAME}}
+{{/NAMESPACE}}
+
+
+

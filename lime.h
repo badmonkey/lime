@@ -31,9 +31,16 @@ struct Token
 
 enum TOKENID
 {
-      HALT = 0
+      HALT   =  0
     , IGNORE = -1
-    , ERROR = -2
+    , ERROR  = -2
+    , NO_OP  = -3
+};
+
+
+enum LIME
+{
+      NO_MATCHING_TOKEN = -1
 };
 
 
@@ -78,29 +85,27 @@ struct tokenizer
 	std::vector<int>	matches;
 	lime::StringPiece	capture;
 	
-	
+
+        tok.id = lime::ERROR;
+        tok.text = text;
 	tok.line = linenum_();
 	tok.offset = offset_();
+        tok.extra_data = nullptr;
 	
 	
 	if ( text.empty() )
 	{
-	    tok.text = text;
-	    tok.id = lime::ERROR;
-	    
-	    return -1;
+	    return NO_MATCHING_TOKEN;
 	}
 	
 	if (  !regex_set_.Match(text, &matches, &capture)
 	    || matches.empty() )
 	{
 	    // error
-	    tok.id = lime::ERROR;
-	    return -1;
+	    return NO_MATCHING_TOKEN;
 	}
 	
 	tok.text.set( capture.data(), capture.length() );
-	tok.extra_data = nullptr;
 	
 	offset_() += capture.length();
 	text.remove_prefix( capture.length() );

@@ -19,6 +19,7 @@
 
 
 module ::= modulebody.
+module ::= NAMESPACE IDENT modulebody.
 
 
 modulebody ::= moduleitem.
@@ -43,11 +44,12 @@ rule ::= rulehead.
 rule ::= rulehead action.
 
 
-rulehead ::= MATCH REGEX AS value.
-rulehead ::= MATCH REGEX THEN IDENT AS value.
-rulehead ::= IGNORE REGEX.
-rulehead ::= IGNORE IDENT THEN REGEX.
-rulehead ::= HALT REGEX.
+pattern ::= REGEX.
+pattern ::= REGEX PLUSPLUS IDENT.
+
+rulehead ::= MATCH pattern AS value.
+rulehead ::= IGNORE pattern.
+rulehead ::= HALT pattern.
 
 
 value ::= IDENT.
@@ -55,3 +57,4 @@ value ::= NUMBER.
 
 
 action ::= CURLYBODY.
+

@@ -1,11 +1,12 @@
 
 
-namespace lime
+namespace limelexer
 
 
 tokenizer curlyblock
-  ignore "{" then curlyblock
-  ignore "[^}]+"
+  ignore "{" ++ curlyblock
+  ignore /[^}]+/
+  ignore /\r?\n/ { new_line(); }
   halt "}"
 end
 
@@ -18,8 +19,8 @@ end
 
 
 tokenizer regex_slash
-  ignore "[^\\/]+"
-  ignore "\\."
+  ignore /[^\/\\]+/
+  ignore /\\./
   halt "/"
 end
 
@@ -27,23 +28,28 @@ end
 tokenizer lime
 
   match "include" as LIME_INCLUDE
-  match "tokeni(z|s)er" as LIME_TOKENIZER
+  match /tokeni(z|s)er/ as LIME_TOKENIZER
   match "end" as LIME_END
   match "match" as LIME_MATCH
   match "as" as LIME_AS
   match "ignore" as LIME_IGNORE
   match "halt" as LIME_HALT
-  match "then" as LIME_THEN
+  match "namespace" as LIME_NAMESPACE
+  match "++" as LIME_PLUSPLUS
 
   match /[0-9]+/ as LIME_NUMBER
 
-  ignore "[ \t]+"
+  ignore /[ \t]+/
 
-  match "[_a-zA-Z][_a-zA-Z0-9]*" as LIME_IDENT
+  ignore /\-\-[^\n]*/
 
-  match /"/ then regex_quote as LIME_REGEX
-  match "/" then regex_slash as LIME_REGEX
+  match /[_a-zA-Z][_a-zA-Z0-9]*/ as LIME_IDENT
+
+  match /"/ ++ regex_quote as LIME_REGEX
+  match "/" ++ regex_slash as LIME_REGEX
   
-  match "{" then curlyblock as LIME_CURLYBODY
+  match "{" ++ curlyblock as LIME_CURLYBODY
+
+  ignore /\r?\n/ { new_line(); }
 
 end
